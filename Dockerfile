@@ -9,4 +9,4 @@ COPY ${JAR_FILE} app.jar
 ENTRYPOINT ["java", "-jar", "/app.jar"]
 
 # 애플리케이션이 사용하는 포트를 설정합니다.
-EXPOSE 8080
+EXPOSE 8443
