@@ -13,10 +13,9 @@ public class WebConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins("http://54.180.157.200")
+                registry.addMapping("/api/**")
+                        .allowedOrigins("https://neon7.site")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "HEAD")
-                        .allowedHeaders("*")
                         .allowCredentials(true)
                 ;
             }
