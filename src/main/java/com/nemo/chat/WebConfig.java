@@ -15,7 +15,10 @@ public class WebConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
                         .allowedOrigins("http://54.180.157.200")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "HEAD");
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "HEAD")
+                        .allowedHeaders("*")
+                        .allowCredentials(true)
+                ;
             }
         };
     }
