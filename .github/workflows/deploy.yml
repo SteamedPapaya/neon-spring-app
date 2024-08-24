@@ -46,4 +46,4 @@ jobs:
             docker pull sx0527/my-spring-app:latest
             docker stop spring-container || true
             docker rm spring-container || true
-            docker run -d -p 8080:8080 --name spring-container sx0527/my-spring-app:latest
+            docker run -d -p 8443:8443 --name spring-container sx0527/my-spring-app:latest
