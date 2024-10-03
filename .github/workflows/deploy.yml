@@ -33,8 +33,8 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t sx0527/my-spring-app:latest .
-          docker push sx0527/my-spring-app:latest
+          docker build -t sx0527/neon-gateway-spring:latest .
+          docker push sx0527/neon-gateway-spring:latest
 
       - name: SSH and deploy to EC2
         uses: appleboy/ssh-action@v0.1.5
@@ -43,7 +43,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            docker pull sx0527/my-spring-app:latest
+            docker pull sx0527/neon-gateway-spring:latest
             docker stop spring-container || true
             docker rm spring-container || true
-            docker run -d -p 8080:8080 --name spring-container sx0527/my-spring-app:latest
+            docker run -d -p 8080:8080 --name spring-container sx0527/neon-gateway-spring:latest
