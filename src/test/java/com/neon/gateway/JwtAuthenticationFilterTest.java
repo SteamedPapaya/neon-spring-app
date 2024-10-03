@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.Date;
@@ -41,10 +42,11 @@ public class JwtAuthenticationFilterTest {
                 .build();
 
         // MockServerWebExchange 생성
-        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+        ServerWebExchange exchange = MockServerWebExchange.from(request);
 
         // 필터 실행
-        Mono<Void> result = jwtAuthenticationFilter.filter(exchange, chain -> {
+        JwtAuthenticationFilter.Config config = new JwtAuthenticationFilter.Config(); // 필터 설정 생성
+        Mono<Void> result = jwtAuthenticationFilter.apply(config).filter(exchange, chain -> {
             exchange.getResponse().setStatusCode(HttpStatus.OK);
             return Mono.empty();
         });
@@ -62,10 +64,11 @@ public class JwtAuthenticationFilterTest {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer invalid-token")
                 .build();
 
-        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+        ServerWebExchange exchange = MockServerWebExchange.from(request);
 
         // 필터 실행
-        Mono<Void> result = jwtAuthenticationFilter.filter(exchange, chain -> Mono.empty());
+        JwtAuthenticationFilter.Config config = new JwtAuthenticationFilter.Config(); // 필터 설정 생성
+        Mono<Void> result = jwtAuthenticationFilter.apply(config).filter(exchange, chain -> Mono.empty());
 
         // 필터가 UNAUTHORIZED 상태 코드를 설정해야 함
         result.block();
