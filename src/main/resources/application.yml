@@ -7,6 +7,13 @@ spring:
   cloud:
     gateway:
       routes:
+        - id: preflight
+          uri: no://op  # 프리플라이트 요청에 대한 처리
+          predicates:
+            - Method=OPTIONS
+          filters:
+            - RemoveRequestHeader=Origin  # OPTIONS 요청에 Origin 헤더를 삭제
+
         - id: users
           uri: https://user.neon7.site
           predicates:
