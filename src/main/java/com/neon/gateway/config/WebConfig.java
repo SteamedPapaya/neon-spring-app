@@ -1,5 +1,6 @@
-package com.neon.gateway;
+package com.neon.gateway.config;
 
+import com.neon.gateway.AppProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
