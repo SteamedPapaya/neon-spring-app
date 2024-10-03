@@ -1,8 +1,18 @@
-spring:
-  application:
-    name: chat
 server:
   port: 8080
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      routes:
+        - id: user-service
+          uri: https://user.neon7.site
+          predicates:
+            - Path=/user/**
+          filters:
+            - JwtAuthenticationFilter
 
 management:
   endpoint:
