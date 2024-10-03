@@ -23,6 +23,11 @@ spring:
           filters:
             - JwtAuthenticationFilter
 
+        - id: oauth2
+          uri: https://user.neon7.site
+          predicates:
+            - Path=/oauth2/**
+
         - id: events-get
           uri: https://event.neon7.site
           predicates:
