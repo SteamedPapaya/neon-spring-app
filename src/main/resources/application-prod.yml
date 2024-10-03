@@ -1,12 +1,3 @@
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/proddb
-    username: siyoon
-    password: 375632
-  jpa:
-    hibernate:
-      ddl-auto: none
-
 app:
   origins:
     - "https://neon7.site"
