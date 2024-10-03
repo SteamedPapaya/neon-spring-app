@@ -4,49 +4,55 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebFilter;
-import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 /**
- * WebFlux 기반의 JwtAuthenticationFilter 클래스는 모든 요청에서 JWT 토큰을 검증하는 역할을 합니다.
- * 비동기 방식으로 요청을 처리하며, 유효한 토큰이 있을 때만 요청을 계속 처리합니다.
+ * Spring Cloud Gateway용 JwtAuthenticationFilter는 모든 요청에서 JWT 토큰을 검증하는 역할을 합니다.
+ * 유효한 토큰이 있을 때만 요청을 계속 처리합니다.
  */
 @Component
 @Slf4j
-public class JwtAuthenticationFilter implements WebFilter {
+public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config> {
 
     @Value("${jwt.secret}")
     private String secretKey;
 
-    /**
-     * WebFlux 기반의 필터 메서드로, 비동기 방식으로 JWT 토큰을 검증합니다.
-     * @param exchange ServerWebExchange: 요청과 응답 정보를 포함한 객체
-     * @param chain WebFilterChain: 필터 체인
-     * @return Mono<Void>: 비동기 응답
-     */
+    public JwtAuthenticationFilter() {
+        super(Config.class);
+    }
+
+    public static class Config {
+        // 필터 설정에 필요한 값이 있으면 여기에 추가
+    }
+
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        String token = resolveToken(exchange);
+    public GatewayFilter apply(Config config) {
+        return (exchange, chain) -> {
+            String token = resolveToken(exchange);
 
-        log.info("JWT token: {}", token);
-        log.info("validateToken: {}", validateToken(token));
-        // 토큰이 없거나 유효하지 않으면 401 응답
-        if (token == null || !validateToken(token)) {
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
-        }
+            log.info("JWT token: {}", token);
+            log.info("validateToken: {}", validateToken(token));
 
-        // 유효한 토큰이면 사용자 정보를 설정하고 체인 통과
-        Claims claims = getClaims(token);
-        exchange.getRequest().mutate().header("X-User-Id", claims.getSubject()).build();
+            // 토큰이 없거나 유효하지 않으면 401 응답
+            if (token == null || !validateToken(token)) {
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
 
-        log.info("JWT Token: {}", claims);
-        return chain.filter(exchange);
+            // 유효한 토큰이면 사용자 정보를 설정하고 체인 통과
+            Claims claims = getClaims(token);
+            exchange.getRequest().mutate().header("X-User-Id", claims.getSubject()).build();
+
+            log.info("JWT Claims: {}", claims);
+            return chain.filter(exchange);
+        };
     }
 
     /**
