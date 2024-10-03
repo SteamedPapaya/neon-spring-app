@@ -8,17 +8,26 @@ spring:
     gateway:
       routes:
         - id: user-service
-          uri: https://user.neon7.site  # 인증 서비스로 라우팅
+          uri: https://user.neon7.site
           predicates:
             - Path=/users/**
           filters:
-            - JwtAuthenticationFilter  # JWT 필터 적용
+            - JwtAuthenticationFilter
+
         - id: event-service
-          uri: https://event.neon7.site  # 이벤트 서비스로 라우팅
+          uri: https://event.neon7.site
           predicates:
             - Path=/events/**
+            - Method=GET
+
+        - id: event-service-post
+          uri: https://event.neon7.site
+          predicates:
+            - Path=/events/**
+            - Method=POST,PUT,DELETE
           filters:
-            - JwtAuthenticationFilter  # JWT 필터 적용
+            - JwtAuthenticationFilter
+
       globalcors:
         add-to-simple-url-handler-mapping: true
         cors-configurations:

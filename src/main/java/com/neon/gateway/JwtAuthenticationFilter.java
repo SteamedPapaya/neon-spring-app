@@ -37,8 +37,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         return (exchange, chain) -> {
             String token = resolveToken(exchange);
 
-            log.info("JWT token: {}", token);
-            log.info("validateToken: {}", validateToken(token));
+            log.info("is token validated={}", validateToken(token));
 
             // 토큰이 없거나 유효하지 않으면 401 응답
             if (token == null || !validateToken(token)) {
