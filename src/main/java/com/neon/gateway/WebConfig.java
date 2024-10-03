@@ -1,4 +1,4 @@
-package com.nemo.chat;
+package com.neon.gateway;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
