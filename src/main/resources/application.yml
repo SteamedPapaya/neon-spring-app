@@ -10,13 +10,13 @@ spring:
         - id: user-service
           uri: https://user.neon7.site  # 인증 서비스로 라우팅
           predicates:
-            - Path=/user/**
+            - Path=/users/**
           filters:
             - JwtAuthenticationFilter  # JWT 필터 적용
         - id: event-service
           uri: https://event.neon7.site  # 이벤트 서비스로 라우팅
           predicates:
-            - Path=/event/**
+            - Path=/events/**
           filters:
             - JwtAuthenticationFilter  # JWT 필터 적용
       globalcors:
