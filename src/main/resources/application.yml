@@ -6,6 +6,8 @@ spring:
     name: gateway
   cloud:
     gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
       routes:
         - id: preflight
           uri: no://op  # 프리플라이트 요청에 대한 처리
