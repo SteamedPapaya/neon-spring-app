@@ -34,6 +34,7 @@ spring:
             allowCredentials: true
             allowedHeaders: "*"
             exposedHeaders: "*"
+
 management:
   endpoint:
     prometheus:
@@ -44,4 +45,9 @@ management:
         include: health,info,prometheus
 
 jwt:
-  secret: vB2VcZBQRNRTd2KoLvjYx7UPJyYrJLcUOqdv59cob+w=  # ${JWT_SECRET:vB2VcZBQRNRTd2KoLvjYx7UPJyYrJLcUOqdv59cob+w=}
+  secret: vB2VcZBQRNRTd2KoLvjYx7UPJyYrJLcUOqdv59cob+w=
+
+app:
+  origins:
+    - "https://neon7.site"
+    - "https://www.neon7.site"
