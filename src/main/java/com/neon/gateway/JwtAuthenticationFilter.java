@@ -2,63 +2,60 @@ package com.neon.gateway;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
+import reactor.core.publisher.Mono;
 
 /**
- * JwtAuthenticationFilter 클래스는 모든 요청에서 JWT 토큰을 검증하는 역할을 합니다.
- * 요청이 들어올 때 JWT를 파싱하고, 유효한 토큰일 경우 요청을 진행시키며,
- * 유효하지 않거나 없는 경우 요청을 차단합니다.
+ * WebFlux 기반의 JwtAuthenticationFilter 클래스는 모든 요청에서 JWT 토큰을 검증하는 역할을 합니다.
+ * 비동기 방식으로 요청을 처리하며, 유효한 토큰이 있을 때만 요청을 계속 처리합니다.
  */
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+@Slf4j
+public class JwtAuthenticationFilter implements WebFilter {
 
-    // JWT 비밀키는 application.yml 파일에서 가져오며, jwt.secret 값으로 설정됩니다.
     @Value("${jwt.secret}")
     private String secretKey;
 
     /**
-     * 모든 요청이 이 필터를 거치며, JWT 토큰이 유효한지 검증합니다.
-     * @param request  HttpServletRequest: 클라이언트의 요청
-     * @param response HttpServletResponse: 클라이언트로 보낼 응답
-     * @param filterChain FilterChain: 필터 체인
+     * WebFlux 기반의 필터 메서드로, 비동기 방식으로 JWT 토큰을 검증합니다.
+     * @param exchange ServerWebExchange: 요청과 응답 정보를 포함한 객체
+     * @param chain WebFilterChain: 필터 체인
+     * @return Mono<Void>: 비동기 응답
      */
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-        // Authorization 헤더에서 JWT 토큰을 추출
-        String token = resolveToken(request);
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        String token = resolveToken(exchange);
 
-        // 토큰이 없거나 유효하지 않으면 401 UNAUTHORIZED 응답
+        log.info("JWT token: {}", token);
+        log.info("validateToken: {}", validateToken(token));
+        // 토큰이 없거나 유효하지 않으면 401 응답
         if (token == null || !validateToken(token)) {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            return;
+            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+            return exchange.getResponse().setComplete();
         }
 
-        // 유효한 토큰이면 사용자 정보를 설정하고 요청을 계속 처리
+        // 유효한 토큰이면 사용자 정보를 설정하고 체인 통과
         Claims claims = getClaims(token);
-        request.setAttribute("userId", claims.getSubject());
+        exchange.getRequest().mutate().header("X-User-Id", claims.getSubject()).build();
 
-        // 요청을 다음 필터로 전달
-        filterChain.doFilter(request, response);
+        log.info("JWT Token: {}", claims);
+        return chain.filter(exchange);
     }
 
     /**
-     * Authorization 헤더에서 Bearer 토큰을 추출하는 메서드입니다.
-     * @param request HttpServletRequest
+     * Authorization 헤더에서 JWT 토큰을 추출하는 메서드입니다.
+     * @param exchange ServerWebExchange
      * @return 추출된 JWT 토큰 또는 null
      */
-    private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+    private String resolveToken(ServerWebExchange exchange) {
+        String bearerToken = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
@@ -71,12 +68,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * @return 토큰이 유효한 경우 true, 그렇지 않으면 false
      */
     private boolean validateToken(String token) {
+        log.info("JWT={}", token);
         try {
-            // JWT 파싱 및 서명 검증
             Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
             return true;
         } catch (Exception e) {
-            // 검증 실패 시 false 반환
+            log.error("JWT={}", e.getMessage());
             return false;
         }
     }

@@ -1,4 +1,4 @@
-package com.nemo.chat;
+package com.neon.gateway;
 
 import lombok.Getter;
 import lombok.Setter;
