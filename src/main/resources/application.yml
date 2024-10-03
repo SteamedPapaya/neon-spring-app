@@ -46,6 +46,7 @@ spring:
               - POST
               - PUT
               - DELETE
+              - OPTIONS
             allowCredentials: true
             allowedHeaders: "*"
             exposedHeaders: "*"
