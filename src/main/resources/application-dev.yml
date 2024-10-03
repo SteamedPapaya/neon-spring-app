@@ -6,7 +6,3 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
-
-app:
-  origins:
-    - "http://localhost:3000"

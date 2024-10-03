@@ -7,20 +7,20 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: user-service
+        - id: users
           uri: https://user.neon7.site
           predicates:
             - Path=/users/**
           filters:
             - JwtAuthenticationFilter
 
-        - id: event-service
+        - id: events-get
           uri: https://event.neon7.site
           predicates:
             - Path=/events/**
             - Method=GET
 
-        - id: event-service-post
+        - id: events-post-put-delete
           uri: https://event.neon7.site
           predicates:
             - Path=/events/**
@@ -34,7 +34,6 @@ spring:
           '[/**]':
             allowedOrigins:
               - "https://neon7.site"
-              - "https://www.neon7.site"
             allowedMethods:
               - GET
               - POST
