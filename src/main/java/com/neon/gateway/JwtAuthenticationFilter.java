@@ -47,7 +47,11 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 
             // 유효한 토큰이면 사용자 정보를 설정하고 체인 통과
             Claims claims = getClaims(token);
-            exchange.getRequest().mutate().header("X-User-Id", claims.getSubject()).build();
+
+            exchange.getRequest().mutate()
+                    .header("X-User-Id", claims.getSubject())  // 사용자 ID 추가
+                    .header("Authorization", "Bearer " + token)  // Authorization 헤더 유지
+                    .build();
 
             log.info("JWT Claims: {}", claims);
             return chain.filter(exchange);
