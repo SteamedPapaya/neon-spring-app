@@ -46,4 +46,8 @@ jobs:
             docker pull sx0527/neon-gateway-spring:latest
             docker stop spring-container || true
             docker rm spring-container || true
-            docker run -d -p 8080:8080 --name spring-container sx0527/neon-gateway-spring:latest
+            docker run -d \
+            -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
+            -p 8080:8080 \
+            --name spring-container \
+            sx0527/neon-gateway-spring:latest

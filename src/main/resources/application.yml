@@ -8,7 +8,6 @@ spring:
     gateway:
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
-#        - AddRequestHeader=Authorization, ${Authorization}
 
       routes:
         - id: preflight
@@ -24,6 +23,8 @@ spring:
             - Path=/users/**
           filters:
             - JwtAuthenticationFilter
+            - PreserveHostHeader  # Host 헤더 보존
+            - AddRequestHeader=Authorization, "#{request.headers['Authorization']}"  # Authorization 헤더를 명시적으로 전달 (필요 시)
 
         - id: oauth2
           uri: https://user.neon7.site
@@ -39,6 +40,11 @@ spring:
           uri: https://user.neon7.site
           predicates:
             - Path=/login/**
+
+        - id: logout
+          uri: https://user.neon7.site
+          predicates:
+            - Path=/logout/**
 
         - id: events-get
           uri: https://event.neon7.site
@@ -80,4 +86,4 @@ management:
         include: health,info,prometheus
 
 jwt:
-  secret: vB2VcZBQRNRTd2KoLvjYx7UPJyYrJLcUOqdv59cob+w=
+  secret: ${JWT_SECRET}
