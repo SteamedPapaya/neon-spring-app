@@ -22,6 +22,7 @@ spring:
             - Path=/users/**
           filters:
             - JwtAuthenticationFilter
+            - AddRequestHeader=Authorization, #{request.headers.Authorization}  # Authorization 헤더 전달
 
         - id: oauth2
           uri: https://user.neon7.site
