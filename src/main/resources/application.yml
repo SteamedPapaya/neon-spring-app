@@ -8,7 +8,7 @@ spring:
     gateway:
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
-        - AddRequestHeader=Authorization, ${Authorization}
+#        - AddRequestHeader=Authorization, ${Authorization}
 
       routes:
         - id: preflight
