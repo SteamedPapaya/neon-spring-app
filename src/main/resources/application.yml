@@ -41,11 +41,6 @@ spring:
           predicates:
             - Path=/login/**
 
-        - id: logout
-          uri: https://user.neon7.site
-          predicates:
-            - Path=/logout/**
-
         - id: events-get
           uri: https://event.neon7.site
           predicates:
