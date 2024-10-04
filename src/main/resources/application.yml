@@ -28,6 +28,11 @@ spring:
           predicates:
             - Path=/oauth2/**
 
+        - id: login
+          uri: https://user.neon7.site
+          predicates:
+            - Path=/login/**
+
         - id: events-get
           uri: https://event.neon7.site
           predicates:
