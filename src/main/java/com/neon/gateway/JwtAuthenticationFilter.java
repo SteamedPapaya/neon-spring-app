@@ -9,23 +9,34 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
  * Spring Cloud Gateway용 JwtAuthenticationFilter는 모든 요청에서 JWT 토큰을 검증하는 역할을 합니다.
- * 유효한 토큰이 있을 때만 요청을 계속 처리합니다.
  */
 @Component
 @Slf4j
 public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config> {
 
+    private final JwtDecoder jwtDecoder;
+    private final ReactiveAuthenticationManager authenticationManager;
+
     @Value("${jwt.secret}")
     private String secretKey;
 
-    public JwtAuthenticationFilter() {
+    public JwtAuthenticationFilter(JwtDecoder jwtDecoder, ReactiveAuthenticationManager authenticationManager) {
         super(Config.class);
+        this.jwtDecoder = jwtDecoder;
+        this.authenticationManager = authenticationManager;
     }
 
     public static class Config {
@@ -37,32 +48,32 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         return (exchange, chain) -> {
             String token = resolveToken(exchange);
 
-            log.info("is token validated={}", validateToken(token));
-
-            // 토큰이 없거나 유효하지 않으면 401 응답
             if (token == null || !validateToken(token)) {
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 return exchange.getResponse().setComplete();
             }
 
-            // 유효한 토큰이면 사용자 정보를 설정하고 체인 통과
-            Claims claims = getClaims(token);
-
-            exchange.getRequest().mutate()
-                    .header("X-User-Id", claims.getSubject())  // 사용자 ID 추가
-                    .header("Authorization", "Bearer " + token)  // Authorization 헤더 유지
-                    .build();
-
-            log.info("JWT Claims: {}", claims);
-            return chain.filter(exchange);
+            // JWT 토큰 디코딩
+            return Mono.just(token)
+                    .map(tokenString -> jwtDecoder.decode(tokenString))  // jwtDecoder를 통해 디코딩된 Jwt 객체 반환
+                    .flatMap(jwt -> {
+                        JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(jwt);  // Jwt 객체를 JwtAuthenticationToken에 전달
+                        return authenticationManager.authenticate(authenticationToken)  // 인증 처리
+                                .doOnNext(authentication -> {
+                                    exchange.getRequest().mutate()
+                                            .header("X-User-Id", jwt.getSubject())  // 사용자 ID 추가
+                                            .build();
+                                })
+                                .flatMap(authentication -> chain.filter(exchange));
+                    })
+                    .onErrorResume(e -> {
+                        log.error("JWT Decode or Authentication Error: {}", e.getMessage());
+                        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                        return exchange.getResponse().setComplete();
+                    });
         };
     }
 
-    /**
-     * Authorization 헤더에서 JWT 토큰을 추출하는 메서드입니다.
-     * @param exchange ServerWebExchange
-     * @return 추출된 JWT 토큰 또는 null
-     */
     private String resolveToken(ServerWebExchange exchange) {
         String bearerToken = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
@@ -71,28 +82,13 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         return null;
     }
 
-    /**
-     * JWT 토큰이 유효한지 검증하는 메서드입니다.
-     * @param token 검증할 JWT 토큰
-     * @return 토큰이 유효한 경우 true, 그렇지 않으면 false
-     */
     private boolean validateToken(String token) {
-        log.info("JWT={}", token);
         try {
             Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
             return true;
-        } catch (Exception e) {
-            log.error("JWT={}", e.getMessage());
+        } catch (JwtException e) {
+            log.error("JWT Validation Error: {}", e.getMessage());
             return false;
         }
-    }
-
-    /**
-     * JWT 토큰에서 사용자 정보를 추출하는 메서드입니다.
-     * @param token JWT 토큰
-     * @return JWT의 Claims 객체
-     */
-    private Claims getClaims(String token) {
-        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
     }
 }
