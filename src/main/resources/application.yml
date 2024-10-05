@@ -6,25 +6,20 @@ spring:
     name: gateway
   cloud:
     gateway:
-      default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
-
       routes:
         - id: preflight
-          uri: no://op  # 프리플라이트 요청에 대한 처리
+          uri: no://op
           predicates:
             - Method=OPTIONS
           filters:
-            - RemoveRequestHeader=Origin  # OPTIONS 요청에 Origin 헤더를 삭제
+            - RemoveRequestHeader=Origin
 
         - id: users
           uri: https://user.neon7.site
           predicates:
             - Path=/users/**
           filters:
-            - JwtAuthenticationFilter
-            - PreserveHostHeader  # Host 헤더 보존
-            - AddRequestHeader=Authorization, "#{request.headers['Authorization']}"  # Authorization 헤더를 명시적으로 전달 (필요 시)
+            - PreserveHostHeader
 
         - id: oauth2
           uri: https://user.neon7.site
@@ -52,8 +47,6 @@ spring:
           predicates:
             - Path=/events/**
             - Method=POST,PUT,DELETE
-          filters:
-            - JwtAuthenticationFilter
 
       globalcors:
         add-to-simple-url-handler-mapping: true
@@ -71,6 +64,16 @@ spring:
             allowedHeaders: "*"
             exposedHeaders: "*"
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://your-issuer.com  # JWT 발급자 URL
+          jwk-set-uri: https://your-issuer.com/.well-known/jwks.json  # JWK Set URI
+
+jwt:
+  secret: ${JWT_SECRET}
+
 management:
   endpoint:
     prometheus:
@@ -80,5 +83,7 @@ management:
       exposure:
         include: health,info,prometheus
 
-jwt:
-  secret: ${JWT_SECRET}
+logging:
+  level:
+    org.springframework.security: DEBUG
+    com.neon.gateway: DEBUG
