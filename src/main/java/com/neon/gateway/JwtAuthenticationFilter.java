@@ -84,11 +84,18 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 
     private boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
+            // Base64 URL 인코딩을 사용하는지 확인
+            Jwts.parserBuilder()
+                    .setSigningKey(secretKey.getBytes())
+                    .build()
+                    .parseClaimsJws(token);
             return true;
-        } catch (JwtException e) {
-            log.error("JWT Validation Error: {}", e.getMessage());
+        } catch (Exception e) {
             return false;
         }
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
     }
 }
