@@ -19,8 +19,7 @@ spring:
           predicates:
             - Path=/users/**
           filters:
-            - PreserveHostHeader
-            - JwtAuthenticationFilter  # JWT 인증 필터 적용
+            - name: JwtTokenFilter
           metadata:
             description: "User service route for fetching user information"
 
@@ -52,6 +51,8 @@ spring:
           predicates:
             - Path=/events/**
             - Method=POST,PUT,DELETE
+          filters:
+            - name: JwtTokenFilter
 
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin,Access-Control-Allow-Credentials
