@@ -19,7 +19,9 @@ spring:
           predicates:
             - Path=/users/**
           filters:
-            - PreserveHostHeader
+            - name: JwtTokenFilter
+          metadata:
+            description: "User service route for fetching user information"
 
         - id: oauth2
           uri: https://user.neon7.site
@@ -30,6 +32,8 @@ spring:
           uri: https://user.neon7.site
           predicates:
             - Path=/auth/**
+          filters:
+            - StripPrefix=1
 
         - id: login
           uri: https://user.neon7.site
@@ -47,6 +51,16 @@ spring:
           predicates:
             - Path=/events/**
             - Method=POST,PUT,DELETE
+          filters:
+            - name: JwtTokenFilter
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin,Access-Control-Allow-Credentials
+#  cors:
+#    allowed-origins: "*"
+#    allowed-methods: GET, POST, PUT, DELETE, OPTIONS
+#    allowed-headers: "*"
+#    exposed-headers: "Authorization"
 
       globalcors:
         add-to-simple-url-handler-mapping: true
@@ -62,14 +76,14 @@ spring:
               - OPTIONS
             allowCredentials: true
             allowedHeaders: "*"
-            exposedHeaders: "*"
+            exposedHeaders: "Authorization"
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: https://your-issuer.com  # JWT 발급자 URL
-          jwk-set-uri: https://your-issuer.com/.well-known/jwks.json  # JWK Set URI
+#  security:
+#    oauth2:
+#      resourceserver:
+#        jwt:
+#          issuer-uri: https://your-issuer.com  # JWT 발급자 URL
+#          jwk-set-uri: https://your-issuer.com/.well-known/jwks.json  # JWK Set URI
 
 jwt:
   secret: ${JWT_SECRET}
